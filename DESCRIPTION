@@ -1,0 +1,38 @@
+Package: accelerator
+Type: Package
+Title: A Tidy Framework For Accelerometry
+Version: 0.4.0
+Date: 2023-11-10
+Authors@R: c(person("Cristina", "Barón-Suárez",
+                     role=c("aut","cre"),
+                     email="cbaronsuarez@gmail.com "),
+                   person("Julia", "Wärnberg",
+                   role=c("aut"),
+                   email="jwarnberg@uma.es"),
+                  person("Juan Carlos", "Benavente-Marín",
+                   role=c("aut"),
+                   email="jc.benaventemarin@gmail.com"),
+                  person("Francisco J", "Barón-López",
+                  role=c("aut"),
+                  email="baron@uma.es"))
+Maintainer: Cristina Baron Suarez <cbaronsuarez@gmail.com>
+Description: A tidy framework for doing accelerometry analysis
+URL: https://github.com/EpiPHAAN/accelerator
+License: GPL 3.0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.2
+Imports: 
+    caTools,
+    lubridate,
+    parallel,
+    ggiraph,
+    purrr,
+    progress,
+    tidyverse,
+    furrr
+Author: Cristina Barón-Suárez [aut, cre],
+        Julia Wärnber [aut],
+        Juan Carlos Benavente Marin [aut],
+        Francisco J Barón López [aut]
+Date/Publication: 2023-11-10 10:00:00 UTC
