@@ -7,7 +7,7 @@
 #'
 #' @examples
 criteriaGenerator=function(EXPRESSION){
-  expr <- rlang::parse_expr(EXPRESION)
+  expr <- rlang::parse_expr(EXPRESSION)
   function(df,useNW=TRUE){
   if(!useNW | ! (df %>%assertthat::has_name(".criterioNW"))) df$.criterioNW=FALSE
 
