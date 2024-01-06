@@ -24,7 +24,7 @@ intersecta_1n<-function(what_n,when_1,name=NULL,short=TRUE){
     if(short) return (NULL)
     return(interval(when_1@start,when_1@start))
   }
-  resultado=what_n[indices]
+  resultado=what_n[indices] %>% lubridate::intersect(when_1)
   if (!is.null(name) & length(name)==1)    names(resultado) = sprintf(".%d", seq_along(resultado))
   resultado
 }
