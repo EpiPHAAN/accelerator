@@ -6,6 +6,19 @@
 #' @param short
 #' @return
 intersectIntervals<-function(what_n,when_n,useNames=FALSE,short=TRUE){
+
+  #Codigo para cuando el segundo parámetro es una lista de intervalos
+  if (is.list(when_n)){
+    return(map(when_n, ~intersectIntervals(what_n, .x, useNames=useNames,short=short)))
+  }
+
+
+  #Codigo para cuando el primer parámetro es una lista de intervalos
+  if (is.list(what_n)){
+    return(map(what_n, ~intersectIntervals(.x, when_n,useNames=useNames,short=short)))
+  }
+
+  #Codigo principal para el caso de intersectar un vector de intervalos con un vector de intervalos con nombre
   if(useNames & !is.null(names(when_n))){
   resultado=map2(when_n, names(when_n), function(.x,.y) intersecta_1n(what_n=what_n,when_1=.x,name=.y, short=short))  
   } else {
@@ -16,6 +29,9 @@ intersectIntervals<-function(what_n,when_n,useNames=FALSE,short=TRUE){
 
   resultado=vectorInterval(resultado)
   resultado
+
+
+
 }
 
 intersecta_1n<-function(what_n,when_1,name=NULL,short=TRUE){
