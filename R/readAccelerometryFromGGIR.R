@@ -1,14 +1,14 @@
-readAccelerometryFromGGIR <-function(base,RAW,start=NA,end=NA,tz = "Europe/Madrid",...){
+readAccelerometryFromGGIR <-function(path_ggir_ts="",base="",RAW="",start=NA,end=NA,tz = "Europe/Madrid",...){
 function(){
-  path_part1=sprintf("%s/meta/basic/meta_%s.RData",base,RAW)
+  if(path_ggir_ts == "" ) path_ggir_ts=sprintf("%s/meta/basic/meta_%s.RData",base,RAW)
   
   df=NULL
   
   try({
     
-    if(file.exists(path_part1)) {
+    if(file.exists(path_ggir_ts)) {
       
-      load(path_part1)
+      load(path_ggir_ts)
     
       if(!is.null(M$metashort) & !is.null(M$metalong)){
         df=M$metashort %>%

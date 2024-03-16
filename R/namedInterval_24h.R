@@ -8,9 +8,15 @@
 #' @param duration
 #' @return
 #' @export
-namedInterval_24h<-function(intervals,first=TRUE,last=TRUE,offsetLabels=dhours(0),starts=dhours(0),duration=period(1,"days")){
-  start=int_start(intervals$.isOn)
-  end=int_end(intervals$.isOn)
+namedInterval_24h<-function(df,first=TRUE,last=TRUE,offsetLabels=dhours(0),starts=dhours(0),duration=period(1,"days"),.isOn=NULL){
+  if(!is.null(.isOn)) {
+    start=int_start(.isOn[1])
+    end=int_end(.isOn[1])
+  } else {
+  start=first(df$timestamp)
+  end=last(df$timestamp)
+  }
+  
   timezone=tz(start)
   
   # problematic with summer time... Probably need another When to deal with this
@@ -23,11 +29,6 @@ namedInterval_24h<-function(intervals,first=TRUE,last=TRUE,offsetLabels=dhours(0
     interval(from,from+duration#-dseconds(5)
              ) %>% set_names(as.character(as_date(from[1]+offsetLabels)+0:numDias))
       }  else {
-    if(numDias==0){
       interval(from,from+duration) %>% set_names(as.character(from[1]+offsetLabels))
-    } else {
-      #Void
-      .isOn() %>% set_names(as.character(as_date(start)))
-    }
   }
 }

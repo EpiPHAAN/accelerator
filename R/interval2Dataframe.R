@@ -5,6 +5,9 @@
 #' @export
 #' @examples
 interval2Dataframe=function(intervals, .id=c()){
+  #Por si llega vacia
+  if(is.null(intervals)) return(data.frame())
+  
   #Por si hay que añadir columnas con nombres
       if(length(.id)>0) {
         thisId=.id[1]
