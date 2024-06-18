@@ -1,5 +1,5 @@
-#' @title namedInterval_01h
-#' @description namedInterval_01h
+#' @title measureInterval_01h
+#' @description measureInterval_01h
 #' @param intervals
 #' @param first
 #' @param last
@@ -8,7 +8,7 @@
 #' @param duration
 #' @return
 #' @export
-namedInterval_01h<-function(df,first=TRUE,last=TRUE,offsetLabels=dhours(0),starts=dhours(0),duration=period(1,"hours")){
+measureInterval_01h<-function(df,first=TRUE,last=TRUE,offsetLabels=dhours(0),starts=dhours(0),duration=period(1,"hours")){
   start=first(df$timestamp)
   end=last(df$timestamp)
   timezone=tz(start)

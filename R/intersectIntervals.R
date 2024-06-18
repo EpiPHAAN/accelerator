@@ -43,6 +43,8 @@ int_overlaps_strict <- function(int1, int2) {
 }
 
 intersecta_1n<-function(what_n,when_1,name=NULL,short=TRUE){
+  
+  if(!is.null(names(what_n))) names(what_n)=NULL
   indices=when_1 %>% int_overlaps_strict(what_n) %>% which()
   if(length(indices)==0){
     if(short) return (NULL)

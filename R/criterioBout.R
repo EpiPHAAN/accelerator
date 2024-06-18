@@ -16,15 +16,19 @@ criterioBout=function(df,pctBouts=1,durBoutMin=dseconds(5)){
   durEpoch=as.duration(df$timestamp[2]-df$timestamp[1])
   windowSize=durBoutMin/durEpoch
   if(! (df %>%assertthat::has_name(".interrupcion"))) df$.interrupcion=FALSE
+  endrule="NA"
   df %>%
     mutate(
       .criterio=.criterioRaw & (!.interrupcion),
-      from_pct = caTools::runmean(.criterio, k=windowSize, alg="C", align = "left")*(1-caTools::runmax(.interrupcion, k=windowSize, alg="C", align = "left")),
+      from_pct = caTools::runmean(.criterio, k=windowSize, alg="C", align = "left")*(1-caTools::runmax(.interrupcion, k=windowSize, alg="C", align = "left",endrule=endrule)),
       from_stat = .criterio & from_pct >= pctBouts,
-      from_tramo=caTools::runmax(from_stat ,k=windowSize,alg="C",align="right"), #& .criterio,
-      to_pct = caTools::runmean(.criterio, k=windowSize, alg="C", align = "right")*(1-caTools::runmax(.interrupcion, k=windowSize, alg="C", align = "right")),
+      from_tramo=caTools::runmax(from_stat ,k=windowSize,alg="C",align="right",endrule=endrule), #& .criterio,
+      to_pct = caTools::runmean(.criterio, k=windowSize, alg="C", align = "right")*(1-caTools::runmax(.interrupcion, k=windowSize, alg="C", align = "right",endrule=endrule)),
       to_stat = .criterio & to_pct >= pctBouts,
-      to_tramo=caTools::runmax(to_stat ,k=windowSize,alg="C",align="left"), #& .criterio,
+      to_tramo=caTools::runmax(to_stat ,k=windowSize,alg="C",align="left",endrule=endrule), #& .criterio,
       to_from=to_tramo & from_tramo
     ) %>% .[["to_from"]]
 }
+
+
+

@@ -6,11 +6,22 @@
 #' @export
 #'
 #' @examples
-criteriaGenerator=function(EXPRESSION){
+criteriaGenerator <- function(EXPRESSION,useNW=TRUE){
   expr <- rlang::parse_expr(EXPRESSION)
-  function(df,useNW=TRUE){
-  if(!useNW | ! (df %>%assertthat::has_name(".criterioNW"))) df$.criterioNW=FALSE
-
-  df %>% mutate(.criterio= (!!expr & (!.criterioNW))) %>%.[[".criterio"]]
+  if(useNW) return(
+    function(df){
+      df %>% mutate(.criterio= (!!expr & (!.criterioNW))) %>%.[[".criterio"]]
+    }
+  )
+  function(df){
+    df %>% mutate(.criterio= (!!expr)) %>%.[[".criterio"]]
   }
 }
+# criteriaGenerator=function(EXPRESSION){
+#   expr <- rlang::parse_expr(EXPRESSION)
+#   function(df,useNW=TRUE){
+#   if(!useNW | ! (df %>%assertthat::has_name(".criterioNW"))) df$.criterioNW=FALSE
+# 
+#   df %>% mutate(.criterio= (!!expr & (!.criterioNW))) %>%.[[".criterio"]]
+#   }
+# }
