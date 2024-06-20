@@ -22,12 +22,13 @@ accelerometry2Intervals<-function(driver,defineIntervals,activity_log,...){
     for(v in names(result)){
       if(is.null(result[[v]])){
         message("Calculo de ", v)
-        intervalsForThis=list()
-        if(!is.null(dependences[[v]])){
-          intervalsForThis= result[dependences[[v]]]#result %>% #keep({names(.) %in% dependences[[v]]})
-        }
+#        intervalsForThis=list()
+#        if(!is.null(dependences[[v]])){
+#          intervalsForThis= result[dependences[[v]]]#result %>% #keep({names(.) %in% dependences[[v]]})
+#        }
         tryCatch({
-        result[[v]] <- (defineIntervals[[v]])(df=data,intervals=intervalsForThis,activity_log=activity_log,...)
+#        result[[v]] <- (defineIntervals[[v]])(df=data,intervals=intervalsForThis,activity_log=activity_log,...)
+        result[[v]] <- (defineIntervals[[v]])(df=data, intervals=result, activity_log=activity_log,...)
         if(!is.null(result[[v]])){
           message("\tIntervalos: ", length(result[[v]]))}
         }, error=function(e) {NULL})
