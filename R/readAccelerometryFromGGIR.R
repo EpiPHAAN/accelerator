@@ -1,3 +1,16 @@
+#' Title
+#'
+#' @param base 
+#' @param RAW 
+#' @param start 
+#' @param end 
+#' @param tz 
+#' @param ... 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 readAccelerometryFromGGIR <-function(path_ggir_ts="",base="",RAW="",start=NA,end=NA,tz = "Europe/Madrid",...){
 function(){
   if(path_ggir_ts == "" | is.null(path_ggir_ts) | is.na(path_ggir_ts) ) path_ggir_ts=sprintf("%s/meta/basic/meta_%s.RData",base,RAW)
