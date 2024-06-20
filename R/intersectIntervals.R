@@ -34,8 +34,18 @@ intersectIntervals<-function(what_n,when_n,useNames=FALSE,short=TRUE){
 
 }
 
+
+int_overlaps_strict <- function(int1, int2) {
+  stopifnot(c(is.interval(int1), is.interval(int2)))
+  int1 <- int_standardize(int1)
+  int2 <- int_standardize(int2)
+  int1@start < int2@start + int2@.Data & int2@start < int1@start + int1@.Data
+}
+
 intersecta_1n<-function(what_n,when_1,name=NULL,short=TRUE){
-  indices=when_1 %>% int_overlaps(what_n) %>% which()
+  
+  if(!is.null(names(what_n))) names(what_n)=NULL
+  indices=when_1 %>% int_overlaps_strict(what_n) %>% which()
   if(length(indices)==0){
     if(short) return (NULL)
     return(interval(when_1@start,when_1@start))
