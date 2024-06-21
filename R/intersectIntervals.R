@@ -1,10 +1,14 @@
-#' @title intersectIntervals
-#' @description intersectIntervals
-#' @param what_n
-#' @param when_n
-#' @param useNames
-#' @param short
+#' Title
+#'
+#' @param what_n 
+#' @param when_n 
+#' @param useNames 
+#' @param short 
+#'
 #' @return
+#' @export
+#'
+#' @examples
 intersectIntervals<-function(what_n,when_n,useNames=FALSE,short=TRUE){
 
   #Codigo para cuando el segundo parámetro es una lista de intervalos
