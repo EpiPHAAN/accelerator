@@ -1,4 +1,5 @@
-#' Title
+
+#' Title intersectIntervals
 #'
 #' @param what_n 
 #' @param when_n 
@@ -72,8 +73,7 @@ int_overlaps_numeric <- function (int1, int2) {
 }
 
 
-
-#' Title
+#' Title touchedIntervals
 #'
 #' @param what_n 
 #' @param when_n 
@@ -86,7 +86,8 @@ int_overlaps_numeric <- function (int1, int2) {
 #'
 #' @examples
 touchedIntervals<-function(what_n,when_n,useNames=FALSE,short=TRUE,operator=I){
-  
+
+    
   #Codigo para cuando el segundo parámetro es una lista de intervalos
   if (is.list(when_n)){
     return(map(when_n, ~touchedIntervals(what_n, .x, useNames=useNames,short=short,operator=operator)))
