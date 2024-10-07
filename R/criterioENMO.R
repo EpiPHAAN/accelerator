@@ -12,7 +12,8 @@
 #'
 #' @export
 criterioENMO=function(df,limInf=0,limSup=Inf,useNW=TRUE){
-  if(!useNW | ! (df %>%assertthat::has_name(".criterioNW"))) df$.criterioNW=FALSE
+#  if(!useNW | ! (df %>%assertthat::has_name(".criterioNW"))) df$.criterioNW=FALSE
+  if(!useNW | ! (".criterioNW" %in% names(df))) df$.criterioNW=FALSE
 
   df %>% mutate(.criterio= (ENMO>=limInf & ENMO<=limSup & (!.criterioNW))) %>%.[[".criterio"]]
 }

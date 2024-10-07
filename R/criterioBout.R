@@ -15,7 +15,8 @@ criterioBout=function(df,pctBouts=1,durBoutMin=dseconds(5)){
   #durEpoch=dseconds(5)
   durEpoch=as.duration(df$timestamp[2]-df$timestamp[1])
   windowSize=durBoutMin/durEpoch
-  if(! (df %>%assertthat::has_name(".interrupcion"))) df$.interrupcion=FALSE
+#  if(! (df %>%assertthat::has_name(".interrupcion"))) df$.interrupcion=FALSE
+  if(! ".interrupcion" %in% names (df)) df$.interrupcion=FALSE
   endrule="NA"
   df %>%
     mutate(
