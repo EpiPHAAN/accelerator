@@ -18,7 +18,7 @@ connectOverDistanceV2=function(interval,distanciaNoche=dhours(4),distanciaDia=dm
 
   #Si hay interrupciones, se marcan como no closeEnough
   if(!is.null(interruption) && nrow(interruption)>0){
-    interval$closeEnough= interval$closeEnough & check_overlapWithInterruption(interval,interruption)
+    interval$closeEnough= interval$closeEnough & !check_overlapWithInterruption(interval,interruption)
   }
   
 

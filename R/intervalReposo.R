@@ -9,10 +9,10 @@
 #' @return A dataframe of intervals representing the intervals of being bed and sleeping for every day of accelerometry data
 #'
 #' @export
-intervalReposo=function(intervalo1,intervalo2,distance1=dminutes(40), distance2=dminutes(5),distance3=dhours(4),distance4=dminutes(1),interruption=NULL){
+intervalReposo=function(intervalo1,intervalo2,distance1=dminutes(40), distance2=dminutes(5),distance3=dhours(4),distance4=dminutes(1),earlyMorning=c(1,9),interruption=NULL){
 
   if(isTRUE(nrow(intervalo1)>0)){
-  intervalo3=intervalo1 %>% connectOverDistance(distance1)  %>%
+  intervalo3=intervalo1 %>% connectOverDistance(distance1,interruption=interruption)  %>%
     connectOverInterval(intervalo2 %>% connectOverDistance(distance2)) %>%
     transmute(from=fromPre,to=toPost)
   } else {intervalo3=intervalo1 %>% select(from,to) }
@@ -22,6 +22,6 @@ intervalReposo=function(intervalo1,intervalo2,distance1=dminutes(40), distance2=
   ###Interesante poner aqui unión de tramos según horas de sueño y distancia
 
   intervalo3=intervalo3 %>%
-    connectOverDistanceV2(distanciaNoche=distance3,distanciaDia=distance4,interruption=interruption) %>% select(from,to)
+    connectOverDistanceV2(distanciaNoche=distance3,distanciaDia=distance4,earlyMorning=earlyMorning,interruption=interruption) %>% select(from,to)
   intervalo3
   }

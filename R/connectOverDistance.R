@@ -8,13 +8,17 @@
 #'
 #' @export
 
-connectOverDistance=function(interval,distance=dminutes(30)){
+connectOverDistance=function(interval,distance=dminutes(30),interruption=NULL){
   secDistance=distance/dseconds(1)
   interval=interval %>%
     mutate(lag=difftime(from,lag(to,1),units="secs"),
            lead=difftime(lead(from,1),to,units="secs"),
            closeEnough=lead<=distance)
 
+  #Si hay interrupciones, se marcan como no closeEnough
+  if(!is.null(interruption) && nrow(interruption)>0){
+    interval$closeEnough= interval$closeEnough & !check_overlapWithInterruption(interval,interruption)
+  }
 
   interval %>%
     mutate(change=!lag(closeEnough),
