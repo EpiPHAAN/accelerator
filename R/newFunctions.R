@@ -576,7 +576,13 @@ fInterna1 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,driver
 
 
 fInterna2 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,driver){
-  #  message("fInterna2")
+  #message("fInterna2")
+  #La siguiente linea permite hacer que si no hay what, se use el when en su lugar
+  if(length(intervalsTxt)==1){
+    if (intervalsTxt=="") {
+      intervalsTxt=measureIntervalTxt
+      message("fInterna2: intervalsTxt vacío, se usa measureIntervalTxt:",intervalsTxt)
+    }}
   resultado=map(intervalsTxt %>% set_names(intervalsTxt),\(.x) fInterna1(intervals,.x,measureIntervalTxt,variables,driver))
   resultado
 } 

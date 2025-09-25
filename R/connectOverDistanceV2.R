@@ -32,11 +32,15 @@ connectOverDistanceV2=function(interval,distanciaNoche=dhours(4),distanciaDia=dm
 
 
 
-cercaElastico=function(to1,from2,distanciaNoche=dhours(4),distanciaDia=dminutes(30),earlyMorning=c(1,9)){
+cercaElastico=function(to1,from2,distanciaNoche=dhours(4),
+                       distanciaDia=dminutes(30),earlyMorning=c(1,9)){
+  
   distancia=difftime(from2,to1,units="hours")
   
-  ( (hour(to1)+minute(to1)/60) >=earlyMorning[1] & (hour(from2)+minute(from2)/60) <=earlyMorning[2]  & distancia<=distanciaNoche) | distancia<=distanciaDia
+  inicio=hour(to1)+minute(to1)/60
+  inicio[inicio>12] =inicio[inicio>12]-24
   
+  (inicio >=earlyMorning[1] & (hour(from2)+minute(from2)/60) <=earlyMorning[2]  & distancia<=distanciaNoche) | (distancia<=distanciaDia)
 }
 
 
