@@ -7,7 +7,6 @@
 #' @export
 #' @examples
 computeIntervals <- function(dataframe,defineIntervals){
-
- pmap(dataframe,accelerometry2Intervals %>% partial(defineIntervals=defineIntervals),.progress = "intervals")
+    computingIntervals=accelerometry2Intervals %>% partial(defineIntervals = defineIntervals)
+  future_pmap( dataframe,computingIntervals)
 }
-

@@ -18,19 +18,13 @@ accelerometry2Intervals<-function(driver,defineIntervals,activity_log,...){
   
   repeat{
     contador=contador+1
-    message("Pasada: ",contador)
+#    message("Pasada: ",contador)
     for(v in names(result)){
       if(is.null(result[[v]])){
-        message("Calculo de ", v)
-#        intervalsForThis=list()
-#        if(!is.null(dependences[[v]])){
-#          intervalsForThis= result[dependences[[v]]]#result %>% #keep({names(.) %in% dependences[[v]]})
-#        }
+#       message("Calculo de ", v)
         tryCatch({
-#        result[[v]] <- (defineIntervals[[v]])(df=data,intervals=intervalsForThis,activity_log=activity_log,...)
         result[[v]] <- (defineIntervals[[v]])(df=data, intervals=result, activity_log=activity_log,...)
-        if(!is.null(result[[v]])){
-          message("\tIntervalos: ", length(result[[v]]))}
+#       if(!is.null(result[[v]])){message("\tIntervalos: ", length(result[[v]]))}
         }, error=function(e) {NULL})
       }
     }
@@ -39,16 +33,9 @@ accelerometry2Intervals<-function(driver,defineIntervals,activity_log,...){
     
     FIN <- newNumNULLS==0 | newNumNULLS>=oldNumNULLS
     
-    message("FIN? ",FIN)
+#    message("FIN? ",FIN)
     if(FIN) break
     oldNumNULLS=newNumNULLS
   }
   result %>% keep(negate(is.null)) 
 }
-
-
-# Simpler old version
-#accelerometry2Intervals<-function(driver,defineIntervals,...){
-#  data=driver()
-#  map(defineIntervals,function(f) tryCatch({ f(data)}, error=function(e) {NULL})) %>% keep(negate(is.null)) 
-#}
