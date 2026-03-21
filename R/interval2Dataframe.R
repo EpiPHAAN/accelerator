@@ -1,7 +1,8 @@
 #' @title Convert an interval to a dataframe
-#' @description Convert an interval to a dataframe
-#' @param intervals
-#' @return
+#' @description Parses \code{lubridate::interval} objects or a nested list of intervals into a standardized \code{start}/\code{end} data frame. Can optionally assign custom identifier columns.
+#' @param intervals A lubridate interval vector or list containing intervals.
+#' @param .id An optional character vector specifying column names to dynamically bind when unnesting lists.
+#' @return A data frame containing \code{start} and \code{end} representations of the provided intervals.
 #' @export
 #' @examples
 interval2Dataframe=function(intervals, .id=c()){

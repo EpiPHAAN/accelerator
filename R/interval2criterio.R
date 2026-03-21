@@ -1,9 +1,11 @@
-#' Title
+#' @title Evaluate Timeline Against Intervals
 #'
-#' @param ts 
-#' @param intervalos 
+#' @description Projects a data frame of temporal intervals onto a fixed timeline array (\code{ts}). Each point in the timeline array that falls within an interval is assigned a boolean \code{TRUE}.
 #'
-#' @return
+#' @param ts A vector of POSIXct timestamps representing the chronological axis.
+#' @param intervalos A data frame representing intervals, containing at minimum \code{from} and \code{to} columns.
+#'
+#' @return A logical vector of the same length as \code{ts}, indicating if each timestamp belongs to any interval.
 #' @export
 #'
 #' @examples

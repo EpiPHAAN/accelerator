@@ -2,7 +2,7 @@
 % Please edit documentation in R/searchByCriteria.R
 \name{searchByCriteria}
 \alias{searchByCriteria}
-\title{Title: searchByCriteria}
+\title{Search Bouts by Dynamic Criteria}
 \usage{
 searchByCriteria(
   df,
@@ -14,14 +14,21 @@ searchByCriteria(
 )
 }
 \arguments{
-\item{df}{}
+\item{df}{The data frame of timeline/epoch measurements.}
 
-\item{EXPRESSION}{}
+\item{EXPRESSION}{A logical expression string (e.g., `"ENMO > 0.05"`) to be dynamically parsed.}
 
-\item{pctBouts}{}
+\item{pctBouts}{The required fraction (percentage from 0 to 1) of time within the window that the criteria must hold. Default is 0.8.}
 
-\item{durBoutMin}{}
+\item{durBoutMin}{The required minimum continuous rolling duration for the bout to be confirmed. Default is 1 minute.}
+
+\item{runmean}{Logical. If TRUE, applies a running mean smoothing filter globally to referenced fields before searching. Default is FALSE.}
+
+\item{useNW}{Logical. If TRUE, avoids returning bouts on detected NonWear time. Default is TRUE.}
+}
+\value{
+A list/vector of validated interval bouts (start and end times).
 }
 \description{
-Title: searchByCriteria
+Dynamically applies a specific criterion string against a dataframe and subsequently groups consecutive positively evaluated epochs into distinct intervals (bouts) based on minimum percentage and duration thresholds.
 }

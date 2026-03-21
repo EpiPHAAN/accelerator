@@ -2,7 +2,7 @@
 % Please edit documentation in R/namedInterval_01h.R
 \name{measureInterval_01h}
 \alias{measureInterval_01h}
-\title{measureInterval_01h}
+\title{Generate Hourly Named Intervals}
 \usage{
 measureInterval_01h(
   df,
@@ -13,6 +13,22 @@ measureInterval_01h(
   duration = period(1, "hours")
 )
 }
+\arguments{
+\item{df}{A data frame representing the accelerometry data with a \code{timestamp} column.}
+
+\item{first}{Logical. If TRUE, includes the first boundary interval. Default is TRUE.}
+
+\item{last}{Logical. If TRUE, includes the last boundary interval. Default is TRUE.}
+
+\item{offsetLabels}{An offset added to the labels (names) of the generated intervals. Default is 0 hours.}
+
+\item{starts}{A duration shift applied to the start times. Default is 0 hours.}
+
+\item{duration}{The duration of each generated interval block. Default is 1 hour (\code{period(1, "hours")}).}
+}
+\value{
+A named lubridate interval vector containing the hourly windows.
+}
 \description{
-measureInterval_01h
+Creates a sequence of continuous hourly intervals covering the entire timespan of the provided data frame.
 }

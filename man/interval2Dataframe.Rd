@@ -6,6 +6,14 @@
 \usage{
 interval2Dataframe(intervals, .id = c())
 }
+\arguments{
+\item{intervals}{A lubridate interval vector or list containing intervals.}
+
+\item{.id}{An optional character vector specifying column names to dynamically bind when unnesting lists.}
+}
+\value{
+A data frame containing \code{start} and \code{end} representations of the provided intervals.
+}
 \description{
-Convert an interval to a dataframe
+Parses \code{lubridate::interval} objects or a nested list of intervals into a standardized \code{start}/\code{end} data frame. Can optionally assign custom identifier columns.
 }

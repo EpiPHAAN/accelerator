@@ -21,19 +21,23 @@ getSummary(
 )
 }
 \arguments{
-\item{df}{}
+\item{df}{A data frame containing accelerometer data with a \code{timestamp} column, alongside logical criteria like \code{.criterioRaw}, \code{.criterioBout}, and \code{.criterioNW}.}
 
-\item{offset}{}
+\item{offset}{A \code{lubridate::Duration} offset added to the timestamps to shift the definition of a "day". Default is 0.}
 
-\item{minimoHorasValidas}{}
+\item{minimoHorasValidas}{Minimum number of valid 'wear' hours required for a day to be considered valid. Default is 20.}
 
-\item{maximoHorasNonWear}{}
+\item{maximoHorasNonWear}{Maximum number of allowed 'non-wear' hours per day. Default is 2.}
 
-\item{durBoutMin}{}
+\item{durBoutMin}{Minimum duration required to compute valid intervals using \code{criterio2Interval}. Default is 5 seconds.}
 }
 \value{
 a list with a summary. This is the info that we use to define activity variables on a daily basis and on a global value.
+
+A list containing: \code{dailyTable} (the daily summary tibble), \code{average} (simple average of sum), \code{weightedaverage} (weighted by valid wear hours), \code{totalValidHours}, and \code{intervals}.
 }
 \description{
 Generates a summary for a epoch or BIN file
+
+Aggregates accelerometer data by day to produce summaries of wear time, non-wear time, and valid days. Computes overall averages and weighted statistics.
 }

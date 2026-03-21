@@ -2,7 +2,7 @@
 % Please edit documentation in R/namedInterval_24h.R
 \name{measureInterval_24h}
 \alias{measureInterval_24h}
-\title{measureInterval_24h}
+\title{Generate Daily Named Intervals}
 \usage{
 measureInterval_24h(
   df,
@@ -15,6 +15,26 @@ measureInterval_24h(
   withName = TRUE
 )
 }
+\arguments{
+\item{df}{A data frame representing the accelerometry data with a \code{timestamp} column.}
+
+\item{first}{Logical. If TRUE, includes the first boundary interval. Default is TRUE.}
+
+\item{last}{Logical. If TRUE, includes the last boundary interval. Default is TRUE.}
+
+\item{offsetLabels}{An offset added to the daily labels (names). Default is 0 hours.}
+
+\item{starts}{A duration offset applied to the start times. Default is 0 hours.}
+
+\item{duration}{The duration of each generated interval block. Default is 1 day (\code{period(1, "days")}).}
+
+\item{.isOn}{Optional explicit interval bounds to delimit the sequence generation.}
+
+\item{withName}{Logical. If TRUE, assigns formatted date string names to each interval. Default is TRUE.}
+}
+\value{
+A named (or unnamed) lubridate interval vector containing the daily windows.
+}
 \description{
-measureInterval_24h
+Creates a sequence of continuous 24-hour intervals covering the timespan of the provided data frame, aligned with midnight.
 }

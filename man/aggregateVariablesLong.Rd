@@ -4,7 +4,7 @@
 \alias{aggregateVariablesLong}
 \title{Title}
 \usage{
-aggregateVariablesLong(intervals, variablesLong, driver, ...)
+aggregateVariablesLong(intervals, variablesLong, driver, parallel = FALSE, ...)
 }
 \arguments{
 \item{intervals}{}

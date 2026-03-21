@@ -1,12 +1,14 @@
 
-#' Title
+#' @title Evaluate SIB (Sustained Inactivity Bouts) v2
 #'
-#' @param df 
-#' @param critAnglez 
-#' @param durBoutMin 
-#' @param ... 
+#' @description Computes Sustained Inactivity Bouts (SIB) based on a specific Z-angle deviation threshold and a minimum bout duration.
 #'
-#' @return
+#' @param df The data frame containing the accelerometry data.
+#' @param critAnglez Numeric threshold representing the maximum allowed deviation of the Z angle within the bout. Default is 5.
+#' @param durBoutMin The minimum continuous duration required to qualify as a SIB. Default is 5 minutes.
+#' @param ... Additional arguments passed to \code{criterioSIB}.
+#'
+#' @return A validated lubridate interval sequence of SIBs.
 #' @export
 #'
 #' @examples
@@ -33,9 +35,24 @@ MuyQuieto_v2 <- function(df,...) {
 
 
 
-# Esta es una definición de cama alternativa a las que ya existen para considerar en el estudio de comparaciones
-measureInterval_bed=function(df,SIB,...){
-  parametersForBed=list(
+#' measureInterval_bed es una definicion de cama alternativa a las que ya existen para considerar en el estudio de comparaciones
+#'
+#' @param df 
+#' @param SIB 
+#' @param parametersForBed 
+#' @param interruption 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+measureInterval_bed=function(df,
+                             SIB,
+                             parametersForBed=NULL,
+                             interruption=NULL,...){
+
+  if(is.null(parametersForBed)) parametersForBed=list(
     distanceMiniSib=dminutes(7),
     distanceMiniQuiet=dminutes(10),
     distanceSib=dminutes(40),
@@ -45,28 +62,45 @@ measureInterval_bed=function(df,SIB,...){
     distanceSedentaryRestOfDay=dminutes(10)
   )
   
+  
   label="bed"
   durMin=dminutes(160)
   durMax=dhours(24)
   intervalSIB = SIB %>% interval2Dataframe() %>% rename(from=start,to=end)
   intervalSIB2=SIB2_v2(df) %>% interval2Dataframe() %>% rename(from=start,to=end)
   intervalMuyQuieto=MuyQuieto_v2(df) %>% interval2Dataframe() %>% rename(from=start,to=end)
+  
+  if(!is.null(interruption)) interruption=interruption %>% interval2Dataframe() %>% rename(from=start,to=end)
+  
   mayorReposo=  intervalSIB2 %>% intervalReposo(
     intervalMuyQuieto,
     distance1=parametersForBed$distanceMiniSib,
-    distance2=parametersForBed$distanceMiniQuiet) %>% 
+    distance2=parametersForBed$distanceMiniQuiet,
+    distance3=parametersForBed$distanceSedentaryEarlyMorning,
+    distance4=parametersForBed$distanceSedentaryRestOfDay,
+    earlyMorning=parametersForBed$earlyMorning,
+    interruption=interruption) %>% 
     intervalBiggerOfDay(intervalSIB)
   
   SIBDormir=intervalSIB %>% intervalIntersectv2(mayorReposo) %>% select(from,to,day)
   QuietoDormir=intervalMuyQuieto %>% intervalIntersectv2(mayorReposo) %>%
     select(from,to,day)
   
+
+  
   dfCama = SIBDormir %>% intervalReposo( QuietoDormir, 
                                          distance1=parametersForBed$distanceSib,
-                                         distance2=parametersForBed$distanceQuiet) %>%
+                                         distance2=parametersForBed$distanceQuiet,
+                                         distance3=parametersForBed$distanceSedentaryEarlyMorning,
+                                         distance4=parametersForBed$distanceSedentaryRestOfDay,
+                                         earlyMorning = parametersForBed$earlyMorning,
+                                         interruption=interruption
+  ) %>%
     connectOverDistanceV2(parametersForBed$distanceSedentaryEarlyMorning,
                           parametersForBed$distanceSedentaryRestOfDay,
-                          parametersForBed$earlyMorning) %>%
+                          parametersForBed$earlyMorning,
+                          interruption=interruption
+    ) %>%
     intervalBiggerOfDay()  %>% select(from,to,day) %>%
     filter(difftime(to,from)<=durMax & difftime(to,from)>=durMin) %>%
     ungroup() #%>% slice(-1)
@@ -75,8 +109,17 @@ measureInterval_bed=function(df,SIB,...){
 }
 
 
-# measureInterval_complementaryInternal mide los intervalos complementarios a los que se les pase.
-# Por ejemplo el complementario de estar dormido es estar despierto.
+
+#'  measureInterval_complementaryInternal mide los intervalos complementarios a los que se les pase. Por ejemplo el complementario de estar dormido es estar despierto.
+#'
+#' @param df 
+#' @param interval 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
 measureInterval_complementaryInternal=function(df,interval,...){
   if(is.null(interval)) return(NULL)
   start=df$timestamp[1]
@@ -98,7 +141,7 @@ measureInterval_complementaryInternal=function(df,interval,...){
 
 
 
-#' Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interés 
+#' Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interes 
 #(ENMO, steps, etc.) en un tiempo determinado.
 #'
 #' @param df 
@@ -133,7 +176,7 @@ searchMaxActivity_1interval=function(df, interval,durInterval=dminutes(5),colAct
   durEpoch=difftime(df$timestamp[2],df$timestamp[1],units="secs")
   numEpochs=durInterval/durEpoch
   
-  dh=df %>% filter((timestamp<=end +durInterval) & (timestamp>=start)) %>% 
+  dh=df %>% filter((timestamp<=end) & (timestamp>=start)) %>% 
     mutate(.acum=cumsum(.data[[colActivity]])) %>% 
     mutate(.diff=lead(.acum,numEpochs,default=0)-.acum)
   
@@ -150,42 +193,38 @@ searchMaxActivity_1interval=function(df, interval,durInterval=dminutes(5),colAct
 
 
 # Funciones de agregados de nuvel uno y nivel 2 que se han descrito como interesantes.
-# Se pueden añadir las que se necesiton sabiendo que van por parejas. Sea lo que sea
+# Se pueden anadir las que se necesiton sabiendo que van por parejas. Sea lo que sea
 # que tengamos interer en clcular en nivel 1, la de nivel 2 agrega de nuevo su resultado,
-# así que debe haber compatibilidad en las columnas que se usan en la agregación.
+# asi que debe haber compatibilidad en las columnas que se usan en la agregacion.
 
 
-
-#
-
-#' Title
+#' @title Aggregate Activity Duration
 #'
-#' @param df 
-#' @param units 
-#' @param ... 
+#' @description Computes the accumulated duration of activity intervals grouped by their generic string identifier or name.
 #'
-#' @return Devuelve las columna: name, dur
+#' @param df The data frame containing interval data with \code{start}, \code{end}, and \code{name} columns.
+#' @param units The corresponding time units to output (e.g. \code{"secs"}, \code{"mins"}). Default is \code{"secs"}.
+#' @param ... Additional arguments.
+#'
+#' @return A summary data frame with columns: \code{name} and \code{dur} (total duration).
 #' @export
 #'
 #' @examples
-aggregate_Duration<-function(df,units="secs",...){
+aggregate_Duration<-function(df,units="mins",...){
+  if(!is.data.frame(df)) df=df[[1]]
   df %>% summarise(dur=sum(as.numeric(difftime(end,start,units=units))), .by=name)
-}
-
-#Devuelve: 
-#dur : media de las duraciones
-aggregate2_Duration_mean<-function(df,...){
-  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
-  df %>% filter(.valid) %>% summarise(dur=mean(dur))
+  
 }
 
 
-#' Title
+#' @title Compute Mean and SD of Duration
 #'
-#' @param df 
-#' @param ... 
+#' @description Computes the mean and standard deviation of durations across all valid intervals. Automatically initializes a \code{.valid} flag if none exists.
 #'
-#' @return mean_dur : media de las duraciones, sd_dur: desviación estándar de las duraciones 
+#' @param df The data frame with an evaluated \code{dur} numeric column.
+#' @param ... Additional arguments.
+#'
+#' @return A 1-row data frame with \code{mean_dur} and \code{sd_dur}.
 #' @export
 #'
 #' @examples
@@ -195,37 +234,89 @@ aggregate2_Duration_meansd<-function(df,...){
 }
 
 
-
-
-
-#----------------------------------------------------------------------------
-#Propósito: Cuando estudiamos actividad en interesan la duración, los pasos, el ritmo y la intensidad
-#Devuelve las columnas: name, steps, dur, cad,  ENMO
 #' Title
 #'
 #' @param df 
-#' @param driver 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+aggregate_PCT<-function(df,...){
+  if(length(df)!=2) return(data.frame()) 
+  df1=df[[1]]
+  df2=df[[2]]
+  if(!is.data.frame(df1) | !is.data.frame(df2)) return(data.frame())
+  
+  i1=df1 %>% select(name,start,end) %>% dataframe2Interval()  
+  i2=df2 %>% select(name,start,end) %>% mutate(name=sprintf("%s..%d",name,row_number())) %>% dataframe2Interval()
+  
+  dfInterna=i1 %>% intersectIntervals(i2,useNames=TRUE,short = FALSE) %>% 
+    interval2Dataframe() 
+  
+  dfInterna=dfInterna %>% mutate(name=str_replace(name,"\\.\\.[0-9]+$","")) %>% 
+    summarise(durAB=sum(as.numeric(difftime(end,start,units="mins"))), .by=name)
+  
+  dfExterna1=df1 %>% 
+    summarise(durA=sum(as.numeric(difftime(end,start,units="mins"))), .by=name)
+  
+  dfExterna2=df2 %>% 
+    summarise(durB=sum(as.numeric(difftime(end,start,units="mins"))), .by=name)
+  
+  dfInterna %>% inner_join(dfExterna1,join_by(name)) %>% inner_join(dfExterna2,join_by(name)) %>% mutate(
+    pctA=round(100*durAB/durA,2),
+    pctB=round(100*durAB/durB,2),
+    difA=durA-durAB,
+    difB=durB-durAB
+  )
+}
+
+
+#' Title
+#'
+#' @param df 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+aggregate2_PCT<-function(df,...){
+  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
+  df %>% filter(.valid) %>% 
+    summarise(durAB=sum(durAB),
+              durA=sum(durA),
+              durB=sum(durB),
+    ) %>%
+    mutate(pctA=round(100*durAB/durA,2),
+           pctB=round(100*durAB/durB,2),
+           difA=durA-durAB,
+           difB=durB-durAB
+    )
+}
+
+
+
+
+
+
+#' Title
+#'
+#' @param df 
 #' @param units 
 #' @param ... 
 #'
-#' @return name, steps, dur, cad,  ENMO
+#' @returns
 #' @export
 #'
 #' @examples
-aggregate_DurStepCadENMO<-function(df,driver,units="secs",...){
+aggregate_N<-function(df,units="mins",...){
+  if(!is.data.frame(df)) df=df[[1]]
   if(! "name" %in% names(df)) {df=df %>% mutate(name=".")}
-  dfAccelerometry<- driver()
-  dfAccelerometry %>%
-    left_join(df,join_by(between(timestamp,start,end,bounds="[]"))) %>%
-    filter(!is.na(start),!is.na(end)) %>% 
-    summarise(
-      steps=last(steps_acc)-first(steps_acc),
-      ENMO=round(mean(ENMO),4),.by=c("name")) %>% 
-    inner_join(  df %>% summarise(
-      dur=sum(as.numeric(difftime(end,start,units=units))), .by=name),
-      by = join_by(name)) %>% 
-    mutate(cad=round(steps/dur,3)) %>% 
-    select(name,steps,dur,cad,ENMO)
+  df %>% summarise(
+    n=sum(end>start,na.rm=0),
+    .by=name)
 }
 
 #' Title
@@ -233,122 +324,150 @@ aggregate_DurStepCadENMO<-function(df,driver,units="secs",...){
 #' @param df 
 #' @param ... 
 #'
-#' @return
+#' @returns
 #' @export
 #'
 #' @examples
-aggregate2_DurStepCadENMO<-function(df,...){
+aggregate2_NNsum <- function(df,...){
   if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
-  df %>% filter(.valid) %>% summarise(mean_dur=mean(dur),
-                                      mean_steps=round(mean(steps),3),
-                                      mean_cad=round(mean(cad),3),
-                                      max_cad=max(cad),
-                                      mean_ENMO=mean(ENMO))
+  df %>% filter(.valid) %>% 
+    summarise(
+      nsum=sum(n,na.rm=T),
+      n=mean(n,na.rm=T)
+      
+    ) 
 }
 
 
 
-#----------------------------------------------------------------------------
-#Propósito: Cuando estudiamos actividad en interesan la duración los pasos, el ritmo, la intensidad y los counts
-#Devuelve las columnas: name, steps, dur, cad ENMO, count
+
+
+
+
 #' Title
 #'
 #' @param df 
-#' @param driver 
+#' @param dfDriver 
 #' @param units 
 #' @param ... 
 #'
-#' @return
+#' @returns
 #' @export
 #'
 #' @examples
-aggregate_ENMOCountStepCad<-function(df,driver,units="secs",...){
+aggregate_NDurEnmoStepCad<-function(df,dfDriver,units="mins",...){
+  if(!is.data.frame(df)) df=df[[1]]
   if(! "name" %in% names(df)) {df=df %>% mutate(name=".")}
-  dfAccelerometry<- driver()
-  dfAccelerometry %>%
-    left_join(df,join_by(between(timestamp,start,end,bounds="[]"))) %>%
-    filter(!is.na(start),!is.na(end)) %>% 
-    summarise(
-      steps=last(steps_acc)-first(steps_acc),
-      ENMO=round(mean(ENMO),4),
-      count=round(mean(BrondCount),4),
-      .by=c("name")) %>% 
-    inner_join(  df %>% summarise(
-      dur=sum(as.numeric(difftime(end,start,units=units))), .by=name),
-      by = join_by(name)) %>% 
-    mutate(cad=round(steps/dur,3)) %>% 
-    select(name,ENMO,count,steps,cad)
-}
-
-#Devuelve:
-#max_ENMO
-#max_count
-#max_steps
-#max_cad
-#' Title
-#'
-#' @param df 
-#' @param ... 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-aggregate2_ENMOCountStepCad_max<-function(df,...){
-  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
-  df %>% filter(.valid) %>% summarise( max_ENMO=max(ENMO),
-                                       max_count=max(count),
-                                       max_steps=max(steps),
-                                       max_cad=max(cad))
+  #message("PASE POR: ", names(df) %>% paste0(sep=" ",collapse=" "),"\n")
+  tryCatch({
+    dfAccelerometry<- dfDriver
+    resultado <- dfAccelerometry %>%
+      mutate(.steps=steps_acc-lag(steps_acc,1)) %>% 
+      left_join(df,join_by(between(timestamp,start,end,bounds="[]"))) %>%
+      filter(!is.na(start),!is.na(end)) %>% 
+      summarise(
+        ENMO=ifelse(length(ENMO)<=1,NA,round(mean(ENMO*1000),4)),
+        pasos=sum(.steps,na.rm=T), 
+        .by=c("name")) %>% 
+      inner_join(  df %>% summarise(
+        n=sum(end>start,na.rm=0),
+        dur=sum(as.numeric(difftime(end,start,units=units))),
+        .by=name),
+        by = join_by(name)) %>% 
+      mutate(cad=round(pasos/dur,3),
+             cad=ifelse(is.nan(cad),NA,cad)) %>% 
+      select(name,n,dur,ENMO,pasos,cad)
+    
+    # corrección para dias que no aparezcan
+    dfDias=df %>% distinct(name)
+    resultado <- dfDias %>% left_join(resultado,by=join_by(name)) %>%
+      mutate(n=ifelse(is.na(n),0,n),
+             dur=ifelse(is.na(dur),0,dur),
+             pasos=ifelse(is.na(pasos),0,pasos)
+      )
+    resultado
+  }
+  , error = function(e) {
+    message("Ocurrió un error en el cálculo: ", e$message)
+    return(data.frame()) 
+  })
 }
 
 
-
-
-
-
-
-#----------------------------------------------------------------------------
-#Propósito: Cuando estudiamos actividad en interesan la intensidad, los pasos y la cadencia, pero no la duración
-#Devuelve las columnas: name, steps,  cad, ENMO
 #' Title
 #'
 #' @param df 
-#' @param driver 
+#' @param dfDriver 
 #' @param units 
 #' @param ... 
 #'
-#' @return
+#' @returns
 #' @export
 #'
 #' @examples
-aggregate_ENMOStepCad<-function(df,driver,units="secs",...){
-  if(! "name" %in% names(df)) {df=df %>% mutate(name=".")}
-  dfAccelerometry<- driver()
-  dfAccelerometry %>%
-    left_join(df,join_by(between(timestamp,start,end,bounds="[]"))) %>%
-    filter(!is.na(start),!is.na(end)) %>% 
-    summarise(
-      steps=last(steps_acc)-first(steps_acc),
-      ENMO=round(mean(ENMO),4),
-      .by=c("name")) %>% 
-    inner_join(  df %>% summarise(
-      dur=sum(as.numeric(difftime(end,start,units=units))), .by=name),
-      by = join_by(name)) %>% 
-    mutate(cad=round(steps/dur,3)) %>% 
-    select(name,ENMO,steps,cad)
+aggregate_NDurEnmoStep<-function(df,dfDriver,units="mins",...){
+  aggregate_NDurEnmoStepCad(df,dfDriver,units) %>% select(-any_of("cad"))
 }
 
-# Devuelve:
-#max_ENMO
-#max_steps
-#max_cad
-aggregate2_ENMOStepCad_max<-function(df,...){
-  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
-  df %>% filter(.valid) %>% summarise( max_ENMO=max(ENMO),
-                                       max_steps=max(steps),
-                                       max_cad=max(cad))
+
+safe_max <- function(x) {
+  if (all(is.na(x))) return(NA_real_)
+  max(x, na.rm = TRUE)
 }
+
+#' Title
+#'
+#' @param df 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+aggregate2_NNsumDurEnmoEnmomaxStepStepmax <- function(df,...){
+  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
+  df %>% filter(.valid) %>% 
+    summarise(
+      nsum=sum(n,na.rm=T),
+      n=mean(n,na.rm=T),
+      dur=mean(dur,na.rm=T),
+      ENMOmax=safe_max(ENMO),
+      ENMO=mean(ENMO,na.rm=T),
+      pasosmax=safe_max(pasos),
+      pasos=mean(pasos,na.rm=T)
+    ) 
+}
+
+
+
+#' Title
+#'
+#' @param df 
+#' @param ... 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+ aggregate2_MEAN<-function(df,...){
+  if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
+  df %>%
+    filter(.valid) %>%
+    summarise(across(where(is.numeric), \(x) round(mean(x, na.rm = TRUE), 3)))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -375,6 +494,7 @@ aggregate2_ENMOStepCad_max<-function(df,...){
 #'
 #' @examples
 aggregate_Duration_meanByHour<-function(df,wide=FALSE,...){
+  if(!is.data.frame(df)) df=df[[1]]
   if(! ".valid" %in% names(df)) {df=df %>% mutate(.valid=TRUE)}
   result= df %>% filter(.valid) %>% 
     mutate(hour=str_replace_all(name,".*_([0-9][0-9])$","\\1")) %>% 
@@ -408,10 +528,10 @@ aggregate_DurationRel<-function(dfCruce,dfName,units="secs",.by="name",...){
 
 
 #----------------------------------------------------------------------------
-#Propósito: Estudiar horario de interés en la que ocurren actividades.
-# La hora de inicio corresponde a prob=0, el final=prob=1, y se puede elegir añadir cualquier valor intermedio
-#Devuelve las columnas: name, timeqxx, donde xx representa el percentil de dos dígitos de la hora
-# ejemplo: timeq25=Hora en la que ha ocurrido el 25% de la actividad de interés
+#Proposito: Estudiar horario de interes en la que ocurren actividades.
+# La hora de inicio corresponde a prob=0, el final=prob=1, y se puede elegir anadir cualquier valor intermedio
+#Devuelve las columnas: name, timeqxx, donde xx representa el percentil de dos digitos de la hora
+# ejemplo: timeq25=Hora en la que ha ocurrido el 25% de la actividad de interes
 
 
 #' Title
@@ -426,6 +546,12 @@ aggregate_DurationRel<-function(dfCruce,dfName,units="secs",.by="name",...){
 #'
 #' @examples
 aggregate_Quantile <- function(df,probs=c(0,0.25,0.5,0.75,1),.by="name",...){
+  #Propósito: Estudiar horario de interés en la que ocurren actividades.
+  # La hora de inicio corresponde a prob=0, el final=prob=1, y se puede elegir añadir cualquier valor intermedio
+  #Devuelve las columnas: name, timeqxx, donde xx representa el percentil de dos dígitos de la hora
+  # ejemplo: timeq25=Hora en la que ha ocurrido el 25% de la actividad de interés
+  
+  if(!is.data.frame(df)) df=df[[1]]
   if(! "name" %in% names(df)) {df=df %>% mutate(name=".")}
   df  %>% nest(data=-c(name)) %>% 
     mutate(quantiles=map(data,intervalQuantile2,probs=probs)) %>%
@@ -450,17 +576,6 @@ aggregate2_Quantile<-function(df,...){
     summarise(across(starts_with("timeq"),\(x) mean(x, na.rm = TRUE)))
 }
 
-#Para que funcionen las funciones de agregado anteriores es necesario introducir en la librería
-# estás otras dos funciones que serán privadas.
-#' Title
-#'
-#' @param dfIntervalos 
-#' @param probs 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 intervalQuantile2<- function(dfIntervalos,probs=c(0,0.25,0.5,0.75,1)){
   accelerator::intervalsQuantiles(dfIntervalos %>%
                                     select(from=start,to=end), probs = probs)%>%
@@ -505,10 +620,6 @@ listaDF2DF1<-function(lista){
 
 
 
-############################################################################################################################
-# aggregateVariablesLong es la función propuesta para calculos agregados tal como se describen en el fichero de configuración
-# Es la única que requiere ser pública. 
-# Requiere de tres funciones privadas que desglosan los cálculos fInterna1, fInterna2, fInterna3
 #' Title
 #'
 #' @param intervals 
@@ -520,17 +631,30 @@ listaDF2DF1<-function(lista){
 #' @export
 #'
 #' @examples
-aggregateVariablesLong <- function(intervals, variablesLong,driver,...){
-  message("aggregateVariablesLong: Entrada")
-  result=variablesLong %>% map(\(.x) fInterna3(intervals,.x[["intervals"]],.x[["measureIntervals"]], .x[["variables"]], driver))
-  message("aggregateVariablesLong: Salida")
+aggregateVariablesLong <- function(intervals, variablesLong,driver, parallel=FALSE,...){
+  ############################################################################################################################
+  # aggregateVariablesLong es la función propuesta para calculos agregados tal como se describen en el fichero de configuración
+  # Es la única que requiere ser pública. 
+  # Requiere de tres funciones privadas que desglosan los cálculos fInterna1, fInterna2, fInterna3
+  dfDriver=driver()
+  result= if(parallel) {
+    variablesLong %>% future_map(~ fInterna3(intervals, .x[["intervals"]],
+                                             .x[["measureIntervals"]], 
+                                             .x[["variables"]], 
+                                             dfDriver))
+  } else {
+    result = variablesLong %>% map(~ fInterna3(intervals, .x[["intervals"]],
+                                               .x[["measureIntervals"]], 
+                                               .x[["variables"]], 
+                                               dfDriver))
+  }
   result
 }
 
 
-#Otro nombres más corto para el agregado de nivel 1 usado en la app.
-# Tal vez deberíamos llamar a estas funciones aggregate_L1 y aggregate_L2 para que sea más claro
-# qué nivel de agregado hacen
+#Otro nombres mas corto para el agregado de nivel 1 usado en la app.
+# Tal vez deberiamos llamar a estas funciones aggregate_L1 y aggregate_L2 para que sea mas claro
+# que nivel de agregado hacen
 
 #' Title
 #'
@@ -556,51 +680,48 @@ Agrega1<-function(...){
 #' @export
 #'
 #' @examples
-Agrega2 <- function(Agregados1,variablesLong,...){ map2(Agregados1,
-                                                        variablesLong, 
-                                                        function(x,y) {
-                                                          map(x, ~(.x %>% map(purrr::possibly(y$summary,otherwise=data.frame()))))
-                                                        })
+Agrega2=function(Agregados1,variablesLong,...) map2(Agregados1,
+                                                    variablesLong, 
+                                                    function(x,y) {
+                                                      map(x, ~(.x %>% map(purrr::possibly(y$summary,otherwise=data.frame()))))
+                                                    })
+
+
+
+fInterna1 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,dfDriver){
+  
+  if(is.null(intervals[[measureIntervalTxt]])) return(data.frame())
+  whatAnidados=str_split(intervalsTxt,"/",simplify = FALSE) %>% unlist()
+  if (any(sapply(intervals[whatAnidados], is.null))) {return(data.frame())}
+  intervalosInterseccion<- map(whatAnidados %>% set_names(whatAnidados), 
+                               function(.x){intervals[[.x]] %>% intersectIntervals(intervals[[measureIntervalTxt]], useNames=TRUE,short = FALSE) %>%
+                                   interval2Dataframe()} )
+  
+  intervalosInterseccion %>% (variables)( dfDriver=dfDriver)
 }
 
 
-
-
-
-fInterna1 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,driver){
-  message("\nfInterna1:", intervalsTxt,"/",measureIntervalTxt)
-  if(is.null(intervals[[intervalsTxt]]) | is.null(intervals[[measureIntervalTxt]])) return(data.frame())
-  resultado=intervals[[intervalsTxt]] %>% intersectIntervals(intervals[[measureIntervalTxt]], useNames=TRUE,short = FALSE) %>% interval2Dataframe() %>% (variables)(driver=driver)#driver se usa por si hay no basta con los intervalos y hay que recurrir a datos crudos como pasos, enmo, que ocurren dentro de ellos.     
-  resultado
-}
-
-
-fInterna2 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,driver){
-  #message("fInterna2")
-  #La siguiente linea permite hacer que si no hay what, se use el when en su lugar
+fInterna2 <- function(intervals,intervalsTxt,measureIntervalTxt,variables,dfDriver){
   if(length(intervalsTxt)==1){
     if (intervalsTxt=="") {
       intervalsTxt=measureIntervalTxt
-      message("fInterna2: intervalsTxt vacío, se usa measureIntervalTxt:",intervalsTxt)
     }}
-  resultado=map(intervalsTxt %>% set_names(intervalsTxt),\(.x) fInterna1(intervals,.x,measureIntervalTxt,variables,driver))
-  resultado
+  
+  etiquetado=intervalsTxt %>% str_split("/") %>% map_chr(~paste0(.,collapse="_",sep=""))
+  
+  map(intervalsTxt %>% set_names(etiquetado),\(.x) fInterna1(intervals,.x,measureIntervalTxt,variables,dfDriver))
 } 
 
-fInterna3 <- function(intervals,intervalsTxt,measureIntervalsTxt,variables,driver){
-  #  message("fInterna3")
+fInterna3 <- function(intervals,intervalsTxt,measureIntervalsTxt,variables,dfDriver){
   measureIntervalsTxt=measureIntervalsTxt %>% keep(~(!is.null(intervals[[.x]]) & length(intervals[[.x]])>=1))
   map(measureIntervalsTxt %>% set_names(measureIntervalsTxt),
-      \(.x) fInterna2(intervals,intervalsTxt,.x,variables,driver))}
+      \(.x) fInterna2(intervals,intervalsTxt,.x,variables,dfDriver))
+}
 
 
 
 
 
-###########################################################################################
-#reduceListDf2Df es una función que transforma una lista de dataframes resultados de agregar
-# en un solo dataframe, teniendo cuidado con el renombrado de las columnas y evitando duplicados
-# Es una función que debería ser privada.
 #' Title
 #'
 #' @param lista 
@@ -610,9 +731,13 @@ fInterna3 <- function(intervals,intervalsTxt,measureIntervalsTxt,variables,drive
 #'
 #' @examples
 reduceListDf2Df<- function(lista){
+###########################################################################################
+#reduceListDf2Df es una función que transforma una lista de dataframes resultados de agregar
+# en un solo dataframe, teniendo cuidado con el renombrado de las columnas y evitando duplicados
+# Es una función que debería ser privada.
   lista=lista %>% keep(negate(is.null)) %>% keep(is.data.frame) %>% keep(~nrow(.x)>0)
   if(length(lista)==0){
-    message("No hay nada en reduceListDf2Df!!")
+    #message("No hay nada en reduceListDf2Df!!")
     return(data.frame())
   }
   resultado=map2(lista,names(lista), 
@@ -624,10 +749,18 @@ reduceListDf2Df<- function(lista){
   resultado
 }
 
+#' Title
+#'
+#' @param lista 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
 reduceListDf2Df_columnbind<- function(lista){
   lista=lista %>% keep(negate(is.null)) %>% keep(is.data.frame) %>% keep(~nrow(.x)>0)
   if(length(lista)==0){
-    message("No hay nada en reduceListDf2Df!!")
+    #message("No hay nada en reduceListDf2Df!!")
     return(data.frame())
   }
   resultado=map2(lista,names(lista), 
@@ -646,12 +779,6 @@ reduceListDf2Df_columnbind<- function(lista){
 
 
 
-###########################################################################################
-# dygraphTS es la función que genera el gráfico de serie temporal en la aplicación del TFG,
-# pero que creo que debería ser de utilidad en la próxima versión de la librería ya que se podría
-# utilizar en futuras aplicaciones donde los usuarios/pacientes puedan recibir un informe detallado
-# de su actividad.
-# Requiere de funciones auxiliares privadas.
 #' Title
 #'
 #' @param df 
@@ -667,7 +794,15 @@ reduceListDf2Df_columnbind<- function(lista){
 #'
 #' @examples
 dygraphTS <- function(df,intervals,UI_ejeY="ENMO",runmeanType=NULL,runmeanTime=0,definePalette=NULL,...){
+  ###########################################################################################
+  # dygraphTS es la función que genera el gráfico de serie temporal en la aplicación del TFG,
+  # pero que creo que debería ser de utilidad en la próxima versión de la librería ya que se podría
+  # utilizar en futuras aplicaciones donde los usuarios/pacientes puedan recibir un informe detallado
+  # de su actividad.
+  # Requiere de funciones auxiliares privadas.
+  if("ENMO" %in% names(df)) df$ENMO=df$ENMO*1000
   UI_ejeY=UI_ejeY[1:min(2,length(UI_ejeY))]
+  
   for(v in UI_ejeY)  df[[v]]=abs(df[[v]])
   
   durEpoch=as.integer(difftime(df$timestamp[[2]],df$timestamp[[1]],units="secs"))
@@ -706,7 +841,7 @@ dygraphTS <- function(df,intervals,UI_ejeY="ENMO",runmeanType=NULL,runmeanTime=0
   }
   
   nombresIntervalosParaMostrar=names(vectorColores) %>% keep(~!str_detect(.,"^\\."))
-  message(paste0(nombresIntervalosParaMostrar,sep=" "))
+  #message(paste0(nombresIntervalosParaMostrar,sep=" "))
   rangeY=df[[UI_ejeY[1]]] %>% quantile(c(0,1),na.rm=T) %>% as.vector()
   rangeY=c(rangeY[1]*0.9+0.1*rangeY[2], rangeY[1]*0.1+0.9*rangeY[2])
   
@@ -741,11 +876,13 @@ dygraphTS <- function(df,intervals,UI_ejeY="ENMO",runmeanType=NULL,runmeanTime=0
     dyOptions(colors=laPaleta,drawGrid = FALSE)
   
   if(length(UI_ejeY)==2){
-    graficoTS=graficoTS %>% dySeries(UI_ejeY[2], axis = "y2")
+    graficoTS=graficoTS %>% dySeries(UI_ejeY[2], axis = "y2") %>% 
+      dyAxis("y2", label = UI_ejeY[2])
   }
   
   graficoTS
 }
+
 
 interval2Color_aux = function(interval,definePalette) {
   if (interval %in% names(definePalette)) {
@@ -783,10 +920,9 @@ interval2Color <- function(intervals,definePalette) {
 
 
 
-
 ###########################################################################################
-# girafePlot es la función que genera el gráfico de intervalos en la aplicación del TFG,
-# pero que creo que debería ser de utilidad en la próxima versión de la librería ya que se podría
+# girafePlot es la funcion que genera el grafico de intervalos en la aplicacion del TFG,
+# pero que creo que deberia ser de utilidad en la proxima version de la libreria ya que se podria
 # utilizar en futuras aplicaciones donde los usuarios/pacientes puedan recibir un informe general
 # de su actividad.
 #' Title
@@ -797,7 +933,7 @@ interval2Color <- function(intervals,definePalette) {
 #' @param definePalette 
 #' @param offLimits 
 #'
-#' @return
+#' @returns
 #' @export
 #'
 #' @examples
@@ -805,7 +941,7 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
   if(is.na(WhenName)) {
     When=measureInterval_24h(df=NULL,.isOn=intervals[[".isOn"]]) 
   } else {
-    When =intervals[[WhenName]]
+    When =intervals[[WhenName]] #%>% interval2Dataframe() %>%  mutate(name=str_replace_all(name,"[._]+[0-9]+$","")) %>%  dataframe2Interval()
   }
   
   
@@ -834,10 +970,9 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
         What=.x
         Cruce=intersectIntervals(What,When,useNames = TRUE,short = TRUE) 
         Cruce %>% interval2Dataframe() %>% mutate(what=.y) 
-      })%>% 
-    mutate(name=str_replace(name,"\\.+[0-9]+$","")) %>% 
-    mutate(data_id=str_c(what,": ",format(start, "%a %d, %H:%M:%S")," - ",format(end, "%H:%M:%S")),
-           tooltip=data_id) 
+      })%>% mutate(name=str_replace(name,"[._]+[0-9]+$","")) %>% 
+    mutate(data_id=str_c(what,"=",format(start, "%Y-%m-%d %H:%M:%S"),"=",format(end, "%Y-%m-%d %H:%M:%S")),
+           tooltip=str_c(what,": ",format(start, "%a %d, %H:%M:%S")," - ",format(end, "%H:%M:%S"))) 
   
   #  dfCruce %>% filter(what=="awake") %>% group_by(name) %>% summarise_all(first)
   
@@ -866,13 +1001,13 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
   
   if(is.null(dfMeasureInterval) & nrow(dfMeasureInterval)==0){ return(NULL)}
   
-  meanWhenDuration=When %>% interval2Dataframe() %>% mutate(dur=as.numeric(difftime(end,start,units="hours"))) %>% 
-    summarise(dur=mean(dur,na.rm=T)) %>% pull()
+  maxWhenDuration=When %>% interval2Dataframe() %>% mutate(dur=as.numeric(difftime(end,start,units="hours"))) %>% 
+    summarise(dur=max(dur,na.rm=T)) %>% pull()
   
   dateBreaks <- case_when(
-    meanWhenDuration<= 1 ~ "5 min",
-    meanWhenDuration<= 2 ~ "10 min",
-    meanWhenDuration<= 6 ~ "30 min",
+    maxWhenDuration<= 1 ~ "5 min",
+    maxWhenDuration<= 2 ~ "10 min",
+    maxWhenDuration<= 6 ~ "30 min",
     TRUE ~                 "1 hour")
   
   
@@ -895,9 +1030,12 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
   levels(dfGraph$name) <- formateaFechas(dfGraph$name %>% levels())
   
   
-  #  dfGraph %>% filter(what=="daily") %>% group_by(name) %>% summarise_all(first)
-  
-  dfLimits=dfGraph %>% filter(what==WhenName) %>% group_by(name) %>% summarise_all(first) %>%
+
+  dfLimits=dfGraph %>% filter(what==WhenName) %>% group_by(name) %>% 
+    #    summarise_all(first) %>%
+    summarise(start=first(start),
+              end=last(end),
+              startGraph=first(startGraph)) %>% 
     mutate(endGraph=startGraph+difftime(end,start)) %>% 
     select(name,startGraph,endGraph) %>% 
     pivot_longer(cols = c(startGraph,endGraph),names_to = "limit",values_to = "value")
@@ -906,51 +1044,55 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
   nombresIntervalosParaMostrar=nombresIntervalosParaMostrar %>% intersect(unique(dfGraph$what))
   dfGraph$what=fct_relevel(dfGraph$what,nombresIntervalosParaMostrar)
   
-  message(dfGraph %>% count(name))
-  
+
   grafico <- dfGraph %>%
-    ggplot(aes(x = startGraph, y = what,color=what,tooltip=tooltip,data_id=data_id)) +
+    ggplot(aes(x = startGraph, y = what, color = what, tooltip = tooltip, data_id = data_id)) +
     geom_segment_interactive(aes(xend = endGraph, yend = what), linewidth = 1) +
     scale_color_manual(values = vectorColores) +
     scale_x_datetime(labels = function(date) {format(date, "%H:%M", tz = "Europe/Madrid")},
                      breaks = scales::breaks_width(dateBreaks)) +
-    geom_vline(data=dfLimits,aes(xintercept = value),linetype="dotted",alpha=0.25)+
+    geom_vline(data = dfLimits, aes(xintercept = value), linetype = "dotted", alpha = 0.25) +
     facet_grid(name ~ .) +
-    labs(y="", x="")+
+    labs(y = "", x = "") +
     theme_bw() +
     theme(
-      #      aspect.ratio = 0.025,
-      legend.position = "bottom",
-      legend.text = element_text(size = 6),
-      legend.spacing.y = unit(0.1, "cm"),
-      axis.ticks.y = element_blank(),
-      axis.text.y = element_blank(),
-      axis.text.x = element_text(size=7,angle = 45, hjust = 1),
-      axis.title.x = element_blank(),
+      # 1. FACETS (A LA DERECHA): Texto horizontal
+      strip.text.y = element_text(angle = 0, size = 9), 
       strip.background = element_blank(),
-      strip.text.y.right = element_text(angle = 0),
-      strip.text.y = element_text(size = 7),
-      panel.spacing.y = unit(0, "lines")) +
+      
+      # 2. EJE Y (A LA IZQUIERDA): Ocultar nombres de los intervalos
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.title.y = element_blank(),
+      
+      # Márgenes y Leyenda (manteniendo lo que ya funcionaba)
+      plot.margin = margin(t = 5, r = 5, b = 5, l = 0, unit = "pt"),
+      legend.position = "bottom",
+      legend.spacing.y = unit(0, "cm"),
+      legend.text = element_text(size = 6, margin = margin(t = -2, b = -2, unit = "pt")),
+      legend.margin = margin(0, 0, 0, 0),
+      legend.box.margin = margin(-10, 0, 0, 0),
+      axis.text.x = element_text(size = 9, angle = 45, hjust = 1)
+    ) +
     guides(color = guide_legend(
-      title.theme = element_text(size = 8, face = "bold"), 
-      label.theme = element_text(size = 6), 
-      label.position = "right",
-      label.hjust = 0,
+      ncol = 8,
+      byrow = TRUE,
+      title.position = "top",
       title.hjust = 0.5,
-      label.spacing = unit(0.1, "cm")  # Reduce el espaciado entre etiquetas
-    ))
-  
-  #  grafico = grafico+geom_vline(data=dfLimits,aes(xintercept = value),linewidth=1,alpha=0.25)
-  
+      keyheight = unit(0.1, "cm"),
+      keywidth = unit(0.3, "cm"),
+      title.theme = element_text(size = 8, face = "bold"),
+      label.theme = element_text(size = 7)
+    )) 
   grafico
   
 }
 
 
 ##########################################################################################
-# computeInvalids es la función que calcula las condiciones de validez según se indica en 
-# el fichero de configuración.
-# requiere de dos funciones auxiliares evaluar_validez y evalValidity que deberían ser privadas
+# computeInvalids es la funcion que calcula las condiciones de validez segun se indica en 
+# el fichero de configuracion.
+# requiere de dos funciones auxiliares evaluar_validez y evalValidity que deberian ser privadas
 #' Title
 #'
 #' @param Agregados1 
@@ -963,9 +1105,12 @@ girafePlot <- function(intervals,WhenName=NA_character_, intervalToPlot=NULL,def
 computeInvalids<- function(Agregados1,invalidationCriteria){
   invalidList=list()
   for(Reason in names(invalidationCriteria)){
+    #    message(Reason)
     Concept=invalidationCriteria[[Reason]]
     dfInvalid=Agregados1 %>% map_df( evalValidity %>% partial(Expression=Concept$Expression,Reason=Reason))
+    
     for (when in Concept$invalidates){
+      #      message("--",when)
       invalidList[[when]] <- as_tibble(invalidList[[when]]) %>% bind_rows(dfInvalid)
     }
   }
@@ -988,6 +1133,7 @@ evaluar_validez <- function(expresion, ...) {
 }  
 
 evalValidity<-function(Agr1,Expression,Reason){
+  if(nrow(Agr1)==0) return(data.frame(name=character(0),.reason=character(0)))
   Agr1 %>%
     mutate(.invalid=
              pmap_lgl(.,evaluar_validez %>% partial(expresion=Expression))) %>%
@@ -1005,7 +1151,7 @@ evalValidity<-function(Agr1,Expression,Reason){
 
 
 
-#Nuevos drivers para leer datos de acelerometría de paquetes
+#Nuevos drivers para leer datos de acelerometria de paquetes
 
 
 
@@ -1025,7 +1171,7 @@ evalValidity<-function(Agr1,Expression,Reason){
 #' @examples
 readAccelerometryFromBioBank <- function(path_biobank_ts="",baseBB="",RAW="",start=NA,end=NA,tz = "Europe/Madrid",...){
   function(){
-    if(path_biobank_ts == "" ) path_biobank_ts=sprintf("%s/%s",baseBB,str_replace(RAW,"\\.bin|\\.csv","-timeSeries.csv.gz"))
+    if(path_biobank_ts == "" ) path_biobank_ts=sprintf("%s/%s",baseBB,str_replace(RAW,"\\.bin|\\.csv|\\.gt3x","-timeSeries.csv.gz"))
     
     dfBB=NULL
     
@@ -1033,13 +1179,12 @@ readAccelerometryFromBioBank <- function(path_biobank_ts="",baseBB="",RAW="",sta
       dfBB <- read_csv(path_biobank_ts,show_col_types = FALSE) %>% 
         rename(timestamp=time) %>% 
         mutate(timestamp=ymd_hms(timestamp) %>% with_tz(tz)) %>% 
-        mutate(acc=acc/1000) %>% 
         set_names(str_replace(names(.),"-","_"))
     })
-    dfBB
+    
+    correctForDST(dfBB)    
   }
 }
-
 
 #' Title
 #'
@@ -1067,13 +1212,15 @@ readAccelerometryFromStepCount <- function(path_stepcount_ts="",baseStepCount=""
         filter(complete.cases(.)) %>% 
         rename(timestamp=time) %>% 
         mutate(timestamp=force_tz(timestamp,tz)) %>% 
-        mutate(steps_acc=cumsum(Steps)) %>% 
-        mutate(cadence=Steps/as.integer(difftime(timestamp,lag(timestamp)))) %>% 
+        mutate(.nextEpochMissing=as.integer(difftime(lead(timestamp),timestamp))>120,
+               Steps=ifelse(.nextEpochMissing,0,Steps),
+               steps_acc=cumsum(Steps), 
+               cadence=Steps/as.integer(difftime(timestamp,lag(timestamp)))) %>% 
         select(timestamp,cadence,steps_acc) %>% 
         filter(complete.cases(.))
       
     })
-    dfStepCount
+    correctForDST(dfStepCount)
   }
 }
 
@@ -1143,9 +1290,9 @@ readAccelerometryForPorto <-function(path_ggir_ts="",base="",RAW="",start=NA,end
 
 
 #################################################################################################
-# Función para crear un nuevo driver como resultado de la interpolación de una lista de ellos
-# La referencia de las marcas horarias lo da el primer driver de la lista así que conviene
-# que el primero sea el de resolución horaria ,más fina.
+# Funcion para crear un nuevo driver como resultado de la interpolacion de una lista de ellos
+# La referencia de las marcas horarias lo da el primer driver de la lista asi que conviene
+# que el primero sea el de resolucion horaria ,mas fina.
 # 
 #' Title
 #'
@@ -1165,9 +1312,15 @@ joinDrivers<- function(...){
     if(length(listaDrivers)==1) return(dfResult)
     
     for(i in 2:length(listaDrivers)){
-      df2=listaDrivers[[i]]()
-      if("timestamp" %in% names(df2)){
-        varsToInterpolate=names(df2) %>% setdiff("tmestamp")
+      df2=listaDrivers[[i]]() %>% filter(complete.cases(.))
+      if(("timestamp" %in% names(df2)) & nrow(df2)>2){
+        varsToInterpolate=names(df2) %>% setdiff("timestamp")
+        # missingTS=difftime(lead(df2$timestamp),df2$timestamp,units="secs")>dseconds(120)
+        # thereAreMissing=sum(missingTS,na.rm=T)>0
+        # if(thereAreMissing){
+        #   missingIND=which(missingTS |lag(missingTS))
+        # }
+        
         for (v in varsToInterpolate){
           vFinal <- v
           contador <- 1
@@ -1175,7 +1328,9 @@ joinDrivers<- function(...){
             vFinal <- paste(v, contador, sep = "_")
             contador <- contador + 1
           }
-          
+          # Tener en cuenta el caso de los missing
+          #if(thereAreMissing) {df2[[v]][missingIND]=0}
+          #ZZZZZ OJO. Approx puede parar entre dos NA
           dfResult[[vFinal]]=approx(x=df2$timestamp, y=df2[[v]], xout=dfResult$timestamp)$y
         }
       }
@@ -1384,11 +1539,6 @@ verificar_cambio_horario <- function(fecha_inicio, fecha_fin) {
 
 
 
-##############################################################################################################
-# cfg transforma lo leído del fichero de configuración en una lista interpretada de objetos que son más fáciles
-# de utilizar para el programador.
-# Seguramente debería ser pública ya que será útil en las aplicaciones futuras que se realicen interpretando
-# el fichero de configuración.
 #' Title
 #'
 #' @param defineIntervals 
@@ -1400,7 +1550,12 @@ verificar_cambio_horario <- function(fecha_inicio, fecha_fin) {
 #' @export
 #'
 #' @examples
-cfg <- function(defineIntervals, variablesLong, invalidationCriteria, intervalPalette ){
+cfg <- function(defineIntervals, variablesLong, invalidationCriteria, intervalPalette, preProcessedFile ){
+  ##############################################################################################################
+  # cfg transforma lo leido del fichero de configuracion en una lista interpretada de objetos que son mas faciles
+  # de utilizar para el programador.
+  # Seguramente deberia ser publica ya que sera util en las aplicaciones futuras que se realicen interpretando
+  # el fichero de configuracion.
   
   conf <- list(defineIntervals=defineIntervals, intervalPalette=intervalPalette, variablesLong=variablesLong, invalidationCriteria=invalidationCriteria)
   
@@ -1410,18 +1565,24 @@ cfg <- function(defineIntervals, variablesLong, invalidationCriteria, intervalPa
   
   conf$intervalColor = unlistColors(conf$menuInterval) %>% .[names(.) %in% conf$intervalNames]
   
-  conf$intervalAggregated=variablesLong %>% map(~ {(.[["intervals"]]  %>% reduce(c))}) %>% unlist() %>% unique()
+  conf$intervalAggregated=variablesLong %>% map(~ {(.[["intervals"]]  %>% reduce(c))}) %>% unlist() %>% unique() %>% setdiff("")
   conf$intervalPreSelected = conf$intervalNames %>% intersect(names(conf$intervalColor)) %>% intersect(conf$intervalAggregated)
   
   conf$intervalUI = intervalColor2checkbox(conf$menuInterval,names(conf$menuInterval),conf$intervalPreSelected) %>% set_names(NULL)
   
   conf$measureInterval = c("daily", "awake", "bed") %>%
     intersect(conf$intervalNames) %>%
-    c(variablesLong %>% map(~ { (.[["measureIntervals"]]  %>% reduce(c))}) %>% unlist()) %>% unique()
+    c(variablesLong %>% map(~ { (.[["measureIntervals"]]  %>% reduce(c))}) %>% unlist()) %>% unique() %>% setdiff("")
   
   conf$aggregation = variablesLong %>%  map_chr(~ .[["Comentario"]]) %>% set_names(names(.), .)
   
-  conf$driverNames = defineIntervals$.drivers
+  if(is_function(preProcessedFile)) {
+    preProcessed=preProcessedFile()
+  } else {load(preProcessedFile)}
+  drivers=preProcessed %>% names() %>% keep(~str_detect(., "^driver_"))
+  names(drivers) =  drivers %>% str_replace("driver_","") %>% str_replace("_ts$","")
+  conf$driverNames = drivers
+  
   conf
 }
 

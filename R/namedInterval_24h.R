@@ -1,12 +1,14 @@
-#' @title measureInterval_24h
-#' @description measureInterval_24h
-#' @param intervals
-#' @param first
-#' @param last
-#' @param offsetLabels
-#' @param starts
-#' @param duration
-#' @return
+#' @title Generate Daily Named Intervals
+#' @description Creates a sequence of continuous 24-hour intervals covering the timespan of the provided data frame, aligned with midnight.
+#' @param df A data frame representing the accelerometry data with a \code{timestamp} column.
+#' @param first Logical. If TRUE, includes the first boundary interval. Default is TRUE.
+#' @param last Logical. If TRUE, includes the last boundary interval. Default is TRUE.
+#' @param offsetLabels An offset added to the daily labels (names). Default is 0 hours.
+#' @param starts A duration offset applied to the start times. Default is 0 hours.
+#' @param duration The duration of each generated interval block. Default is 1 day (\code{period(1, "days")}).
+#' @param .isOn Optional explicit interval bounds to delimit the sequence generation.
+#' @param withName Logical. If TRUE, assigns formatted date string names to each interval. Default is TRUE.
+#' @return A named (or unnamed) lubridate interval vector containing the daily windows.
 #' @export
 measureInterval_24h<-function(df,first=TRUE,last=TRUE,offsetLabels=dhours(0),starts=dhours(0),duration=period(1,"days"),.isOn=NULL,withName=TRUE){
   if(!is.null(.isOn)) {

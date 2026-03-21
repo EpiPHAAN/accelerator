@@ -2,21 +2,24 @@
 % Please edit documentation in R/intersectIntervals.R
 \name{touchedIntervals}
 \alias{touchedIntervals}
-\title{Title touchedIntervals}
+\title{Find Touched Intervals}
 \usage{
 touchedIntervals(what_n, when_n, useNames = FALSE, short = TRUE, operator = I)
 }
 \arguments{
-\item{what_n}{}
+\item{what_n}{The primary interval vector or list.}
 
-\item{when_n}{}
+\item{when_n}{The target interval vector or list against which overlaps are checked.}
 
-\item{useNames}{}
+\item{useNames}{Logical. If TRUE, preserves/applies names.}
 
-\item{short}{}
+\item{short}{Logical. If TRUE, removes \code{NULL} (non-touching) intervals from the result.}
 
-\item{operator}{}
+\item{operator}{A custom function/operator to apply over the touching intervals. Defaults to \code{I} (identity).}
+}
+\value{
+A consolidated vector/list of original intervals from \code{what_n} that overlapped with \code{when_n}.
 }
 \description{
-Title touchedIntervals
+Identifies intervals from \code{what_n} that overlap or touch intervals in \code{when_n}. Unlike intersection, this returns the original untouched bounds of matching segments.
 }

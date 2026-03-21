@@ -2,7 +2,7 @@
 % Please edit documentation in R/readAccelerometryFromGGIR.R
 \name{readAccelerometryFromGGIR}
 \alias{readAccelerometryFromGGIR}
-\title{Title}
+\title{Read Accelerometry Data from GGIR Outuput}
 \usage{
 readAccelerometryFromGGIR(
   path_ggir_ts = "",
@@ -15,18 +15,23 @@ readAccelerometryFromGGIR(
 )
 }
 \arguments{
-\item{base}{}
+\item{path_ggir_ts}{The explicit absolute file path to the RData file.}
 
-\item{RAW}{}
+\item{base}{Directory base string to construct the path if \code{path_ggir_ts} is not provided.}
 
-\item{start}{}
+\item{RAW}{Name of the raw data block to construct the path if \code{path_ggir_ts} is not provided.}
 
-\item{end}{}
+\item{start}{Optional start constraint (currently ignored by internal logic but kept for interface compatibility).}
 
-\item{tz}{}
+\item{end}{Optional end constraint.}
 
-\item{...}{}
+\item{tz}{Timezone string. Default is \code{"Europe/Madrid"}.}
+
+\item{...}{Additional arguments.}
+}
+\value{
+A function without arguments that, when executed, loads the specified GGIR environment and returns the formatted data frame.
 }
 \description{
-Title
+Creates and returns a factory function that loads and standardizes GGIR time-series (`metashort` and `metalong`) data into an appropriate tibble. Applies timezone adjustments and identifies Non-Wear time.
 }

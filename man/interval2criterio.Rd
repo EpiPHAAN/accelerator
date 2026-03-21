@@ -2,15 +2,18 @@
 % Please edit documentation in R/interval2criterio.R
 \name{interval2criterio}
 \alias{interval2criterio}
-\title{Title}
+\title{Evaluate Timeline Against Intervals}
 \usage{
 interval2criterio(ts, intervalos)
 }
 \arguments{
-\item{ts}{}
+\item{ts}{A vector of POSIXct timestamps representing the chronological axis.}
 
-\item{intervalos}{}
+\item{intervalos}{A data frame representing intervals, containing at minimum \code{from} and \code{to} columns.}
+}
+\value{
+A logical vector of the same length as \code{ts}, indicating if each timestamp belongs to any interval.
 }
 \description{
-Title
+Projects a data frame of temporal intervals onto a fixed timeline array (\code{ts}). Each point in the timeline array that falls within an interval is assigned a boolean \code{TRUE}.
 }

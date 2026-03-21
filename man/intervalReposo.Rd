@@ -10,7 +10,9 @@ intervalReposo(
   distance1 = dminutes(40),
   distance2 = dminutes(5),
   distance3 = dhours(4),
-  distance4 = dminutes(1)
+  distance4 = dminutes(1),
+  earlyMorning = c(1, 9),
+  interruption = NULL
 )
 }
 \arguments{

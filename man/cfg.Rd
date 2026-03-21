@@ -4,7 +4,13 @@
 \alias{cfg}
 \title{Title}
 \usage{
-cfg(defineIntervals, variablesLong, invalidationCriteria, intervalPalette)
+cfg(
+  defineIntervals,
+  variablesLong,
+  invalidationCriteria,
+  intervalPalette,
+  preProcessedFile
+)
 }
 \arguments{
 \item{defineIntervals}{}

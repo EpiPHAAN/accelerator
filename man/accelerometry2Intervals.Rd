@@ -2,10 +2,52 @@
 % Please edit documentation in R/accelerometry2Intervals.R
 \name{accelerometry2Intervals}
 \alias{accelerometry2Intervals}
-\title{accelerometry2Intervals}
+\title{Convert Accelerometry Data into Activity Intervals}
 \usage{
 accelerometry2Intervals(driver, defineIntervals, activity_log, ...)
 }
+\arguments{
+\item{driver}{Function. A data loader or "factory" function that, when called 
+without arguments `driver()`, returns the primary accelerometry data frame.}
+
+\item{defineIntervals}{List. A list containing functions used to define intervals. 
+While it may include a `.dependences` element, only the elements that are 
+functions will be processed. Each function must accept the arguments 
+`df`, `intervals`, `activity_log`, and `...`.}
+
+\item{activity_log}{Data frame. A log of activities used as a reference for 
+calculating specific time windows or intervals.}
+
+\item{...}{Additional arguments passed down to the individual interval functions.}
+}
+\value{
+A list containing only the successfully calculated intervals. Any 
+elements that remained `NULL` after the process terminates are filtered out.
+}
 \description{
-accelerometry2Intervals
+Processes accelerometry data to generate a structured list of intervals. 
+It employs an iterative "dependency resolver" approach, allowing interval-defining 
+functions to reference results from one another. The function repeatedly attempts 
+to resolve intervals that return `NULL` until all are calculated or no further 
+progress can be made.
+}
+\details{
+The algorithm uses a `repeat` loop to iterate over the functions in `defineIntervals`. 
+If a function fails or returns `NULL`, the system assumes a dependency is 
+currently missing and will retry in the next iteration. 
+
+Convergence is reached when:
+1. All intervals are successfully resolved (no `NULL` values remain).
+2. A complete pass over the functions results in no new resolved intervals 
+(indicating a circular dependency or an unresolvable error).
+}
+\examples{
+\dontrun{
+# Basic usage example:
+results <- accelerometry2Intervals(
+  driver = function() my_data_loading_func(),
+  defineIntervals = my_interval_logic_list,
+  activity_log = user_log
+)
+}
 }
