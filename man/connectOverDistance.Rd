@@ -5,7 +5,7 @@
 \title{Connect intervals that are close enough
 Generates a smaller dataframe of connected intervals using a data frame of given intervals and a distance that allows tow of them to be connected}
 \usage{
-connectOverDistance(interval, distance = dminutes(30))
+connectOverDistance(interval, distance = dminutes(30), interruption = NULL)
 }
 \arguments{
 \item{interval}{Initial dataframe of intervals to be connected}

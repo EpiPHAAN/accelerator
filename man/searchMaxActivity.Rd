@@ -2,7 +2,7 @@
 % Please edit documentation in R/newFunctions.R
 \name{searchMaxActivity}
 \alias{searchMaxActivity}
-\title{Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interés}
+\title{Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interes}
 \usage{
 searchMaxActivity(
   df,
@@ -21,5 +21,5 @@ searchMaxActivity(
 \item{colActivity}{}
 }
 \description{
-Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interés
+Title searchMaxActivity busca dentro de un intervalo de medida el tramo en que ocurre la mayor cantidad de cierta variable de interes
 }

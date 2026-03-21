@@ -2,19 +2,22 @@
 % Please edit documentation in R/intersectIntervals.R
 \name{intersectIntervals}
 \alias{intersectIntervals}
-\title{Title intersectIntervals}
+\title{Intersect Interval Vectors or Lists}
 \usage{
 intersectIntervals(what_n, when_n, useNames = FALSE, short = TRUE)
 }
 \arguments{
-\item{what_n}{}
+\item{what_n}{The first interval vector or list of intervals.}
 
-\item{when_n}{}
+\item{when_n}{The second interval vector or list of intervals to intersect against \code{what_n}.}
 
-\item{useNames}{}
+\item{useNames}{Logical. If TRUE, attempts to preserve/apply names during the intersection using elements of \code{when_n}.}
 
-\item{short}{}
+\item{short}{Logical. If TRUE, filters out any resulting \code{NULL} elements that signify no intersection.}
+}
+\value{
+A vector or list containing the intersecting bounds of the provided intervals.
 }
 \description{
-Title intersectIntervals
+Computes the intersection of two vectors/lists of intervals. It supports element-wise or list-based rigorous intersections of temporal ranges.
 }

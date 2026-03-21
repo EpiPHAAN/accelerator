@@ -1,12 +1,14 @@
-#' Title
+#' @title Generate Daily Wear and Activity Summaries
 #'
-#' @param df 
-#' @param offset 
-#' @param minimoHorasValidas 
-#' @param maximoHorasNonWear 
-#' @param durBoutMin 
+#' @description Aggregates accelerometer data by day to produce summaries of wear time, non-wear time, and valid days. Computes overall averages and weighted statistics.
 #'
-#' @return
+#' @param df A data frame containing accelerometer data with a \code{timestamp} column, alongside logical criteria like \code{.criterioRaw}, \code{.criterioBout}, and \code{.criterioNW}.
+#' @param offset A \code{lubridate::Duration} offset added to the timestamps to shift the definition of a "day". Default is 0.
+#' @param minimoHorasValidas Minimum number of valid 'wear' hours required for a day to be considered valid. Default is 20.
+#' @param maximoHorasNonWear Maximum number of allowed 'non-wear' hours per day. Default is 2.
+#' @param durBoutMin Minimum duration required to compute valid intervals using \code{criterio2Interval}. Default is 5 seconds.
+#'
+#' @return A list containing: \code{dailyTable} (the daily summary tibble), \code{average} (simple average of sum), \code{weightedaverage} (weighted by valid wear hours), \code{totalValidHours}, and \code{intervals}.
 #' @export
 #'
 #' @examples

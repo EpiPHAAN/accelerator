@@ -1,10 +1,12 @@
-#' Title
+#' @title Connect Clustered Time Intervals
 #'
-#' @param interval 
-#' @param distance 
-#' @param distanceRel 
+#' @description Merges consecutive or close time intervals into larger continuous bouts if the temporal gap between them is smaller than a specified absolute or relative threshold.
 #'
-#' @return
+#' @param interval A data frame containing time intervals, usually with \code{start} and \code{end} POSIXct columns.
+#' @param distance A \code{lubridate::Duration} or time span object. Intervals separated by a gap smaller than this absolute distance will be connected into a single interval. Default is 0 minutes.
+#' @param distanceRel A numeric value. Connects intervals if the gap is smaller than a proportion (\code{distanceRel}) of the duration of the current or following interval. Default is NULL.
+#'
+#' @return A data frame with the connected/merged time intervals (\code{start} and \code{end}).
 #' @export
 #'
 #' @examples

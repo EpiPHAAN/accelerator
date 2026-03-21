@@ -7,14 +7,14 @@
 criterioBout(df, pctBouts = 1, durBoutMin = dseconds(5))
 }
 \arguments{
-\item{df}{data frame with columns .criterio and eventually .criterioNW (that represents NonWear time as TRUE/FALSE)}
+\item{df}{data frame with columns .criterio and eventually .criterioNW (that represents NonWear time as TRUE/FALSE).}
 
-\item{pctBouts}{}
+\item{pctBouts}{Numeric value between 0 and 1. Determines the minimum proportion or percentage of time within the window that the criteria must be fulfilled to be treated as a valid Bout.}
 
-\item{durBoutMin}{minimum amount of time that the condition muest be met to be aconsidered a Bout}
+\item{durBoutMin}{Minimum amount of time (as a lubridate duration) that the condition must consistently be met to be considered a Bout.}
 }
 \value{
-a boolean vector (TRUE/FAlSE) indicating if the condition of belonging to a Bout is met.
+A boolean vector (TRUE/FALSE) indicating if the condition of belonging to a Bout is met for each corresponding epoch.
 }
 \description{
 Generates a vector that indicates for each row of a dataframe (usually epoch or BIN file)

@@ -2,19 +2,22 @@
 % Please edit documentation in R/newFunctions.R
 \name{SIB_v2}
 \alias{SIB_v2}
-\title{Title}
+\title{Evaluate SIB (Sustained Inactivity Bouts) v2}
 \usage{
 SIB_v2(df, critAnglez = 5, durBoutMin = dminutes(5), ...)
 }
 \arguments{
-\item{df}{}
+\item{df}{The data frame containing the accelerometry data.}
 
-\item{critAnglez}{}
+\item{critAnglez}{Numeric threshold representing the maximum allowed deviation of the Z angle within the bout. Default is 5.}
 
-\item{durBoutMin}{}
+\item{durBoutMin}{The minimum continuous duration required to qualify as a SIB. Default is 5 minutes.}
 
-\item{...}{}
+\item{...}{Additional arguments passed to \code{criterioSIB}.}
+}
+\value{
+A validated lubridate interval sequence of SIBs.
 }
 \description{
-Title
+Computes Sustained Inactivity Bouts (SIB) based on a specific Z-angle deviation threshold and a minimum bout duration.
 }

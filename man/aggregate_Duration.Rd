@@ -2,20 +2,20 @@
 % Please edit documentation in R/newFunctions.R
 \name{aggregate_Duration}
 \alias{aggregate_Duration}
-\title{Title}
+\title{Aggregate Activity Duration}
 \usage{
-aggregate_Duration(df, units = "secs", ...)
+aggregate_Duration(df, units = "mins", ...)
 }
 \arguments{
-\item{df}{}
+\item{df}{The data frame containing interval data with \code{start}, \code{end}, and \code{name} columns.}
 
-\item{units}{}
+\item{units}{The corresponding time units to output (e.g. \code{"secs"}, \code{"mins"}). Default is \code{"secs"}.}
 
-\item{...}{}
+\item{...}{Additional arguments.}
 }
 \value{
-Devuelve las columna: name, dur
+A summary data frame with columns: \code{name} and \code{dur} (total duration).
 }
 \description{
-Title
+Computes the accumulated duration of activity intervals grouped by their generic string identifier or name.
 }

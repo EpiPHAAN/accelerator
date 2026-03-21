@@ -2,18 +2,18 @@
 % Please edit documentation in R/newFunctions.R
 \name{aggregate2_Duration_meansd}
 \alias{aggregate2_Duration_meansd}
-\title{Title}
+\title{Compute Mean and SD of Duration}
 \usage{
 aggregate2_Duration_meansd(df, ...)
 }
 \arguments{
-\item{df}{}
+\item{df}{The data frame with an evaluated \code{dur} numeric column.}
 
-\item{...}{}
+\item{...}{Additional arguments.}
 }
 \value{
-mean_dur : media de las duraciones, sd_dur: desviación estándar de las duraciones
+A 1-row data frame with \code{mean_dur} and \code{sd_dur}.
 }
 \description{
-Title
+Computes the mean and standard deviation of durations across all valid intervals. Automatically initializes a \code{.valid} flag if none exists.
 }

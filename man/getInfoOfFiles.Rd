@@ -2,17 +2,20 @@
 % Please edit documentation in R/getInfoOfFiles.R
 \name{getInfoOfFiles}
 \alias{getInfoOfFiles}
-\title{Title}
+\title{Retrieve Information of Files in a Directory}
 \usage{
 getInfoOfFiles(dir, prefix = "", suffix = "\\\\.RData$")
 }
 \arguments{
-\item{dir}{}
+\item{dir}{A string indicating the path to the directory to scan.}
 
-\item{prefix}{}
+\item{prefix}{A string for the required file prefix. If empty, it is ignored.}
 
-\item{suffix}{}
+\item{suffix}{A regex pattern for the required file suffix. Defaults to \\code{"\\\\.RData$"}.}
+}
+\value{
+A tibble with columns: \code{file}, \code{path}, \code{RAW} (the clean name), \code{size}, and \code{mtime}.
 }
 \description{
-Title
+Scans a directory for files matching a specific prefix and suffix, and extracts metadata such as full path, size, modify time (mtime), and the base variable name without the prefix/suffix.
 }

@@ -2,16 +2,18 @@
 % Please edit documentation in R/criteriaGenerator.R
 \name{criteriaGenerator}
 \alias{criteriaGenerator}
-\title{Helps create functions for evaluating boolean expressions over a data frame that are going to be used as criteria for searching bouts}
+\title{Helps create functions for evaluating boolean expressions over a data frame that are going to be used as criteria for searching bouts.}
 \usage{
 criteriaGenerator(EXPRESSION, useNW = TRUE)
 }
 \arguments{
-\item{EXPRESSION}{}
+\item{EXPRESSION}{A string representing an R logical expression (e.g., \code{"ENMO > 0.05"}). This expression will be evaluated dynamically across the rows of the data frame.}
+
+\item{useNW}{Logical. If TRUE, the generated function will automatically enforce a non-wear condition (\code{!.criterioNW}) to ensure intervals are true wear time. Default is TRUE.}
 }
 \value{
 A function that takes a data frame with accelerometry data and returns a vector of booleans
 }
 \description{
-Helps create functions for evaluating boolean expressions over a data frame that are going to be used as criteria for searching bouts
+Helps create functions for evaluating boolean expressions over a data frame that are going to be used as criteria for searching bouts.
 }

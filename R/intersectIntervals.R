@@ -1,12 +1,14 @@
 
-#' Title intersectIntervals
+#' @title Intersect Interval Vectors or Lists
 #'
-#' @param what_n 
-#' @param when_n 
-#' @param useNames 
-#' @param short 
+#' @description Computes the intersection of two vectors/lists of intervals. It supports element-wise or list-based rigorous intersections of temporal ranges.
 #'
-#' @return
+#' @param what_n The first interval vector or list of intervals.
+#' @param when_n The second interval vector or list of intervals to intersect against \code{what_n}.
+#' @param useNames Logical. If TRUE, attempts to preserve/apply names during the intersection using elements of \code{when_n}.
+#' @param short Logical. If TRUE, filters out any resulting \code{NULL} elements that signify no intersection.
+#'
+#' @return A vector or list containing the intersecting bounds of the provided intervals.
 #' @export
 #'
 #' @examples
@@ -73,15 +75,17 @@ int_overlaps_numeric <- function (int1, int2) {
 }
 
 
-#' Title touchedIntervals
+#' @title Find Touched Intervals
 #'
-#' @param what_n 
-#' @param when_n 
-#' @param useNames 
-#' @param short 
-#' @param operator 
+#' @description Identifies intervals from \code{what_n} that overlap or touch intervals in \code{when_n}. Unlike intersection, this returns the original untouched bounds of matching segments.
 #'
-#' @return
+#' @param what_n The primary interval vector or list.
+#' @param when_n The target interval vector or list against which overlaps are checked.
+#' @param useNames Logical. If TRUE, preserves/applies names.
+#' @param short Logical. If TRUE, removes \code{NULL} (non-touching) intervals from the result.
+#' @param operator A custom function/operator to apply over the touching intervals. Defaults to \code{I} (identity).
+#'
+#' @return A consolidated vector/list of original intervals from \code{what_n} that overlapped with \code{when_n}.
 #' @export
 #'
 #' @examples

@@ -9,7 +9,8 @@ connectOverDistanceV2(
   interval,
   distanciaNoche = dhours(4),
   distanciaDia = dminutes(0),
-  earlyMorning = c(1, 9)
+  earlyMorning = c(1, 9),
+  interruption = NULL
 )
 }
 \arguments{
