@@ -1,7 +1,7 @@
 Package: accelerator
 Type: Package
 Title: A Tidy Framework For Accelerometry
-Version: 0.7.3
+Version: 0.7.4
 Date: 2026-03-21
 Authors@R: c(person("Cristina", "Barón-Suárez",
                      role=c("aut","cre"),
