@@ -31,6 +31,7 @@ infoGGIRmeta <- function(path,pb=NULL,tz= "Europe/Madrid"){
   if(!is.null(pb)) pb$tick()$print()
   data.frame(start=start,end=end,serial=serial,hz=hz,stringsAsFactors = F) 
 }
+<<<<<<< HEAD
 
 
 epoch2SerialHz=function(I){
@@ -76,3 +77,5 @@ epoch2SerialHz=function(I){
 }
 
 
+=======
+>>>>>>> 3714706dbab669a7722a62fe79b95f9fca55d2f0
